@@ -40,6 +40,7 @@
 // 2014-08-05 - Added temperature sensor AURIOL (Lidl Version: 09/2013)
 // 2014-08-06 - Implemented uptime
 // 2014-08-08 - Started outsourcing of devices in modules
+// 2014-08-08 - Added blinking LED (PinD13/onboardLED) to signalize received or send messages. This option requires the Timer1 library which can be found under: http://playground.arduino.cc/Code/Timer1
 
 // --- Configuration ---------------------------------------------------------
 #define PROGNAME               "FHEMduino"
@@ -49,6 +50,8 @@
 /* Please set defines in sketch.h
 -----------------------------------------------------------------------------------------------*/
 #include "sketch.h"
+
+//#define MSGLED          // Compile sketch with blinking LED to signalize when a Message is received or send
 
 /*
  * Modified code to fit info fhemduino - Sidey
@@ -175,9 +178,19 @@ String message = "";
 #define MAX_CHANGES            90
 unsigned int timings[MAX_CHANGES];
 unsigned int timings2500[MAX_CHANGES];
+// MessageLED
+
 
 /*-----------------------------------------------------------------------------------------------
-/* Initializing aof Arduino
+/* Globals for MSGLED handling
+-----------------------------------------------------------------------------------------------*/
+
+#ifdef MSGLED
+  volatile bool blinkLED = false;
+#endif
+
+/*-----------------------------------------------------------------------------------------------
+/* Initializing the Arduino
 -----------------------------------------------------------------------------------------------*/
 void setup() {
   // put your setup code here, to run once:
@@ -211,6 +224,12 @@ void setup() {
 
 }
 
+#ifdef MSGLED
+ void blinken() {
+     digitalWrite(PIN_LED, blinkLED);
+     blinkLED=false;
+ }
+#endif
 /*-----------------------------------------------------------------------------------------------
 /* Main loop
 -----------------------------------------------------------------------------------------------*/
@@ -219,6 +238,9 @@ void loop() {
   // put your main code here, to run repeatedly: 
 
   if (messageAvailable()) {
+    #ifdef MSGLED
+     blinkLED=true; // activate LED
+    #endif
     Serial.println(message);
     resetAvailable();
   }
@@ -510,13 +532,17 @@ void serialEvent()
 
 void HandleCommand(String cmd)
 {
+  #ifdef MSGLED
+    blinkLED=true; // activate LED
+  #endif
   // Version Information
   if (cmd.equals("V"))
   {
     Serial.println(F("V " PROGVERS " FHEMduino - compiled at " __DATE__ " " __TIME__));
   }
   // Print free Memory
-  else if (cmd.equals("R")) {
+  else if (cmd.equals("R")) 
+  {
     Serial.print(F("R"));
     Serial.println(freeRam());
   }
