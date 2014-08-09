@@ -44,14 +44,20 @@
 
 // --- Configuration ---------------------------------------------------------
 #define PROGNAME               "FHEMduino"
-#define PROGVERS               "2.2d"
+#define PROGVERS               "2.2d-msgled"
 
 /*-----------------------------------------------------------------------------------------------
 /* Please set defines in sketch.h
 -----------------------------------------------------------------------------------------------*/
 #include "sketch.h"
 
-//#define MSGLED          // Compile sketch with blinking LED to signalize when a Message is received or send
+/*-----------------------------------------------------------------------------------------------
+/* Todo: MSGLED this code has to be moved to out defenition file. May sketch.h or anything else.
+-----------------------------------------------------------------------------------------------*/
+
+#define MSGLED          // Compile sketch with blinking LED to signalize when a Message is received or send
+
+
 
 /*
  * Modified code to fit info fhemduino - Sidey
@@ -172,6 +178,8 @@ String cmdstring;
 volatile bool available = false;
 String message = "";
 
+
+
 /*-----------------------------------------------------------------------------------------------
 /* Globals for bitstream handling
 -----------------------------------------------------------------------------------------------*/
@@ -186,7 +194,11 @@ unsigned int timings2500[MAX_CHANGES];
 -----------------------------------------------------------------------------------------------*/
 
 #ifdef MSGLED
+  #include "TimerOne.h"  // Timer for LED Blinking
+
   volatile bool blinkLED = false;
+  
+  
 #endif
 
 /*-----------------------------------------------------------------------------------------------
@@ -221,6 +233,13 @@ void setup() {
 #endif
 
 #endif // COMP_DCF77
+
+#ifdef MSGLED
+  pinMode(PIN_LED,OUTPUT);
+  Timer1.initialize(1*10000); //Interrupt wird alle zehntel Sekunden ausgelöst
+  Timer1.attachInterrupt(blinken);
+#endif
+
 
 }
 
@@ -584,4 +603,3 @@ void HandleCommand(String cmd)
   }
   cmdstring = "";
 }
-
