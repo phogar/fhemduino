@@ -43,14 +43,13 @@
 
 #define COMP_FA20RF     // Compile sketch with smoke detector Flamingo FA20RF / ELRO RM150RF
 
-#define COMP_TEMP_HUM   // General define to compile sketch with temperature / humidity devices
+//#define COMP_TEMP_HUM   // General define to compile sketch with temperature / humidity devices
 #define COMP_KW9010     // Compile sketch with KW9010 support
 #define COMP_NC_WS      // Compile sketch with PEARL NC7159, LogiLink WS0002 support
 #define COMP_EUROCHRON  // Compile sketch with EUROCHRON / Tchibo support
 #define COMP_LIFETEC    // Compile sketch with LIFETEC support
 #define COMP_TX70DTH    // Compile sketch with TX70DTH (Aldi) support
 #define COMP_AURIOL     // Compile sketch with AURIOL (Lidl Version: 09/2013); only temperature
-
 #define COMP_PEARLNC    // Compile sketch with PEARL NC7200 support
 
 #define COMP_IT_TX      // Compile sketch with Intertechno TX2/3/4 support
@@ -61,10 +60,10 @@
 #define USE_OREGON_41   // Use oregon_41 Module which is already included in fhem. If not defined, the 14_fhemduino_oregon module will be used.
 
 // Future enhancement
-#define COMP_OSV3     // Compile sketch with OSV3 Support (currently not implemented, just for future use)
+//#define COMP_OSV3     // Compile sketch with OSV3 Support (currently not implemented, just for future use)
 //#define COMP_Kaku     // Compile sketch with Kaku  Support (currently not implemented, just for future use)
-#define COMP_HEZ      // Compile sketch with Homeeasy Support (currently not implemented, just for future use)
-#define COMP_XRF      // Compile sketch with XTF Support (currently not implemented, just for future use)
+//#define COMP_HEZ      // Compile sketch with Homeeasy Support (currently not implemented, just for future use)
+//#define COMP_XRF      // Compile sketch with XTF Support (currently not implemented, just for future use)
 
 #ifdef COMP_KW9010      // Compile sketch with KW9010 support
   #define COMP_TEMP_HUM // General define to compile sketch with temperature / humidity devices
@@ -84,4 +83,9 @@
 #ifdef COMP_AURIOL      // Compile sketch with AURIOL (Lidl Version: 09/2013); only temperature
   #define COMP_TEMP_HUM // General define to compile sketch with temperature / humidity devices
 #endif
+#ifdef COMP_PEARLNC      // Compile sketch with PEARL NC7200 support
+  #define COMP_TEMP_HUM  // General define to compile sketch with temperature / humidity devices
+#endif
+
+
 
