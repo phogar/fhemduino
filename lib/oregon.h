@@ -253,56 +253,77 @@ class CrestaDecoder : public DecodeOOK {
       return data;
     }
 
-    virtual char decode (word width) {
-      if (200 <= width && width < 1300) {
-        byte w = width >= 750;
-        switch (state) {
+    // add one bit to the packet data buffer
+virtual void gotBit (char value) {
+    total_bits++;
+    byte *ptr = data + pos;
+
+    if (++bits < 9) {
+        *ptr = (*ptr >> 1) | (value << 7);
+    } else {
+        if (pos > 0) {
+            *ptr = *ptr ^ (*ptr << 1);
+        }
+
+        bits = 0;
+
+        if (++pos >= sizeof data) {
+            resetDecoder();
+            return;
+        }
+    }
+
+    state = OK;
+}
+
+
+      virtual char decode (word width) {
+        if (pos > 0 && data[0] != 0x75) {
+          //packets start with 0x75!
+          return -1;
+        }
+
+        if (200 <= width && width < 1300) {
+          byte w = width >= 750;
+          switch (state) {
           case UNKNOWN:
-            if (w == 1)
-              ++flip;
-            else if (2 <= flip && flip <= 10)
-              state = T0;
-            else
-              return -1;
-            break;
           case OK:
             if (w == 0)
               state = T0;
             else
-              gotBit(1);
+              manchester(1);
             break;
           case T0:
             if (w == 0)
-              gotBit(0);
+              manchester(0);
             else
               return -1;
             break;
-        }
-      } else if (width >= 2500 && pos >= 7)
-        return 1;
-      else
-        return -1;
-      return 0;
-    }
+          }
 
-    virtual void gotBit (char value) {
+          if (pos > 6) {
+            byte len = 3 + ((data[2] >> 1) & 0x1f); //total packet len
+            byte csum = 0;
+            for (byte x = 1; x < len-1; x++) {
+              csum ^= data[x];
+            }
 
-      if (++bits <= 8) {
+            if (len == pos) {
+              if (csum == 0) {
+                return 1;
+              } 
+              else {
+                return -1;
+              }
+            }
+          } 
+        } 
+        else
+          return -1;
 
-        total_bits++;
-        byte *ptr = data + pos;
-        *ptr = (*ptr >> 1) | (value << 7);
+        return 0;
       }
-      else {
-
-        bits = 0;
-        if (++pos >= sizeof data) {
-          resetDecoder();
-          return;
-        }
-      }
-      state = OK;
-    }
+  
 
 
 };
