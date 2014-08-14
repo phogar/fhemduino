@@ -40,6 +40,7 @@
 // 2014-08-05 - Added temperature sensor AURIOL (Lidl Version: 09/2013)
 // 2014-08-06 - Implemented uptime
 // 2014-08-08 - Started outsourcing of devices in modules
+// 2014-08-12 - Added temperature sensor RF-tech (Model: 217S34)
 
 // --- Configuration ---------------------------------------------------------
 #define PROGNAME               "FHEMduino"
@@ -168,6 +169,8 @@ char* sprintDate() {
 String cmdstring;
 volatile bool available = false;
 String message = "";
+long curChangeCount = 0;
+long curTiming = 0;
 
 /*-----------------------------------------------------------------------------------------------
 /* Globals for bitstream handling
@@ -391,6 +394,8 @@ void decoders(unsigned int duration) {
       // update uptime. Could be every where, but still put here
       uptime(millis(), false);
 
+      curChangeCount = changeCount;
+      curTiming = timings[0];
 #ifdef COMP_KW9010
       if (rc == false) {
         rc = receiveProtocolKW9010(changeCount);
@@ -429,6 +434,12 @@ void decoders(unsigned int duration) {
         rc = receiveProtocolAURIOL(changeCount);
       }
 #endif
+#ifdef COMP_RFTECH
+      if (rc == false) {
+        rc = receiveProtocolRFTECH(changeCount);
+      }
+#endif
+
       if (rc == false) {
         // rc = next decoder;
       }
@@ -520,6 +531,12 @@ void HandleCommand(String cmd)
     Serial.print(F("R"));
     Serial.println(freeRam());
   }
+  else if (cmd.equals("c")) {
+    Serial.print("ChangeCount: ");
+    Serial.println(curChangeCount);
+    Serial.print("Timing: ");
+    Serial.println(curTiming);
+  }
 #ifdef COMP_FA20RF
   // Set FA20RF Repetition
   else if (cmd.startsWith("f"))
@@ -554,7 +571,7 @@ void HandleCommand(String cmd)
   // Print Available Commands
   else if (cmd.equals("?"))
   {
-    Serial.println(F("? Use one of V i f d h t R q"));
+    Serial.println(F("? Use one of V i f d h t R q c"));
   }
   cmdstring = "";
 }

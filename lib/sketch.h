@@ -35,7 +35,7 @@
 #define BAUDRATE               9600
 #endif
 
-#define COMP_DCF77      // Compile sketch with DCF-77 Support (currently disableling this is not working, has still to be done)
+//#define COMP_DCF77      // Compile sketch with DCF-77 Support (currently disableling this is not working, has still to be done)
 
 #define COMP_PT2262     // Compile sketch with PT2262 (IT / ELRO switches)
 
@@ -50,6 +50,7 @@
 #define COMP_LIFETEC    // Compile sketch with LIFETEC support
 #define COMP_TX70DTH    // Compile sketch with TX70DTH (Aldi) support
 #define COMP_AURIOL     // Compile sketch with AURIOL (Lidl Version: 09/2013); only temperature
+#define COMP_RFTECH     // Compile sketch with RFTECH (Model 217S34); only temperature
 
 #define COMP_IT_TX      // Compile sketch with Intertechno TX2/3/4 support
 #define USE_IT_TX       // Use 14_CUL_TX.pm Module which is already included in fhem. If not defined, the 14_fhemduino_Env module will be used.

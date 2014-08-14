@@ -1,0 +1,187 @@
+diff --git a/lib/sketch.h b/lib/sketch.h
+index bd70fe0..a31c0e3 100644
+--- a/lib/sketch.h
++++ b/lib/sketch.h
+@@ -35,7 +35,7 @@
+ #define BAUDRATE               9600
+ #endif
+ 
+-#define COMP_DCF77      // Compile sketch with DCF-77 Support (currently disableling this is not working, has still to be done)
++//#define COMP_DCF77      // Compile sketch with DCF-77 Support (currently disableling this is not working, has still to be done)
+ 
+ #define COMP_PT2262     // Compile sketch with PT2262 (IT / ELRO switches)
+ 
+@@ -50,6 +50,7 @@
+ #define COMP_LIFETEC    // Compile sketch with LIFETEC support
+ #define COMP_TX70DTH    // Compile sketch with TX70DTH (Aldi) support
+ #define COMP_AURIOL     // Compile sketch with AURIOL (Lidl Version: 09/2013); only temperature
++#define COMP_RFTECH     // Compile sketch with RFTECH (Model 217S34); only temperature
+ 
+ #define COMP_IT_TX      // Compile sketch with Intertechno TX2/3/4 support
+ #define USE_IT_TX       // Use 14_CUL_TX.pm Module which is already included in fhem. If not defined, the 14_fhemduino_Env module will be used.
+diff --git a/lib/temphum.cpp b/lib/temphum.cpp
+index 8ca1ce4..49fb2f6 100644
+--- a/lib/temphum.cpp
++++ b/lib/temphum.cpp
+@@ -162,6 +162,7 @@ bool receiveProtocolLIFETEC(unsigned int changeCount) {
+ #define LIFE_GLITCH  460
+ #define LIFE_MESSAGELENGTH 24
+ 
++
+   if (changeCount < LIFE_MESSAGELENGTH * 2) {
+     return false;
+   }
+@@ -170,7 +171,7 @@ bool receiveProtocolLIFETEC(unsigned int changeCount) {
+   }
+ 
+ #ifdef DEBUG
+-  bool bitmessage[TX_MESSAGELENGTH];
++  bool bitmessage[LIFE_MESSAGELENGTH];
+   if (GetBitStream(timings, bitmessage, LIFE_MESSAGELENGTH * 2, LIFE_ZERO - LIFE_GLITCH, LIFE_ZERO + LIFE_GLITCH, LIFE_ONE - LIFE_GLITCH, LIFE_ONE + LIFE_GLITCH) == false) {
+       return false;
+   }
+@@ -232,16 +233,16 @@ bool receiveProtocolTX70DTH(unsigned int changeCount) {
+  * AURIOL (Lidl Version: 09/2013)
+  */
+ bool receiveProtocolAURIOL(unsigned int changeCount) {
+-#define AURIOL_SYNC 9200
++#define AURIOL_SYNC 9300
+ #define AURIOL_ONE 3900
+ #define AURIOL_ZERO 1950
+-#define AURIOL_GLITCH 150
++#define AURIOL_GLITCH 200
+ #define AURIOL_MESSAGELENGTH 32
+ 
+   if (changeCount != (AURIOL_MESSAGELENGTH * 2) + 1) {
+     return false;
+   }
+-
++  
+   if ((timings[0] < AURIOL_SYNC - AURIOL_GLITCH) || (timings[0] > AURIOL_SYNC + AURIOL_GLITCH)) {
+     return false;
+   }
+@@ -270,3 +271,47 @@ bool receiveProtocolAURIOL(unsigned int changeCount) {
+ 
+ }
+ #endif
++
++#ifdef COMP_RFTECH
++/*
++ * RF-tech (Model: 217S34)
++ */
++bool receiveProtocolRFTECH(unsigned int changeCount) {
++#define RFTECH_SYNC 8000
++#define RFTECH_ONE 4084
++#define RFTECH_ZERO 2016
++#define RFTECH_GLITCH 250
++#define RFTECH_MESSAGELENGTH 24
++
++  if (changeCount != (RFTECH_MESSAGELENGTH * 2) + 1) {
++    return false;
++  }
++
++  if ((timings[0] < RFTECH_SYNC - AURIOL_GLITCH) || (timings[0] > RFTECH_SYNC + RFTECH_GLITCH)) {
++    return false;
++  }
++
++#ifdef DEBUG
++  bool bitmessage[RFTECH_MESSAGELENGTH];
++  if (GetBitStream(timings, bitmessage, RFTECH_MESSAGELENGTH * 2, RFTECH_ZERO - RFTECH_GLITCH, RFTECH_ZERO + RFTECH_GLITCH, RFTECH_ONE - RFTECH_GLITCH, RFTECH_ONE + RFTECH_GLITCH) == false) {
++    Serial.println("Err: BitStream");
++    return false;
++  }
++#endif
++
++  String rawcode;
++  rawcode = RawMessage(timings, RFTECH_MESSAGELENGTH, RFTECH_ZERO - RFTECH_GLITCH, RFTECH_ZERO + RFTECH_GLITCH, RFTECH_ONE - RFTECH_GLITCH, RFTECH_ONE + RFTECH_GLITCH);
++
++  if (rawcode == "") {
++    return false;
++  }
++
++  // check Data integrity
++  message = "W04";
++  message += rawcode;
++  message += "___"; // Fill up to 12 signs
++  available = true;
++  return true;
++
++}
++#endif
+diff --git a/lib/temphum.h b/lib/temphum.h
+index 076c328..d072b61 100644
+--- a/lib/temphum.h
++++ b/lib/temphum.h
+@@ -29,5 +29,7 @@ bool receiveProtocolTX70DTH(unsigned int changeCount);
+ 
+ bool receiveProtocolAURIOL(unsigned int changeCount);
+ 
++bool receiveProtocolRFTECH(unsigned int changeCount);
++
+ String hex2bin(String hexaDecimal);
+ 
+diff --git a/src/sketch.ino b/src/sketch.ino
+index 4d884e9..715418b 100644
+--- a/src/sketch.ino
++++ b/src/sketch.ino
+@@ -40,6 +40,7 @@
+ // 2014-08-05 - Added temperature sensor AURIOL (Lidl Version: 09/2013)
+ // 2014-08-06 - Implemented uptime
+ // 2014-08-08 - Started outsourcing of devices in modules
++// 2014-08-12 - Added temperature sensor RF-tech (Model: 217S34)
+ 
+ // --- Configuration ---------------------------------------------------------
+ #define PROGNAME               "FHEMduino"
+@@ -168,6 +169,8 @@ char* sprintDate() {
+ String cmdstring;
+ volatile bool available = false;
+ String message = "";
++long curChangeCount = 0;
++long curTiming = 0;
+ 
+ /*-----------------------------------------------------------------------------------------------
+ /* Globals for bitstream handling
+@@ -391,6 +394,8 @@ void decoders(unsigned int duration) {
+       // update uptime. Could be every where, but still put here
+       uptime(millis(), false);
+ 
++      curChangeCount = changeCount;
++      curTiming = timings[0];
+ #ifdef COMP_KW9010
+       if (rc == false) {
+         rc = receiveProtocolKW9010(changeCount);
+@@ -429,6 +434,12 @@ void decoders(unsigned int duration) {
+         rc = receiveProtocolAURIOL(changeCount);
+       }
+ #endif
++#ifdef COMP_RFTECH
++      if (rc == false) {
++        rc = receiveProtocolRFTECH(changeCount);
++      }
++#endif
++
+       if (rc == false) {
+         // rc = next decoder;
+       }
+@@ -520,6 +531,12 @@ void HandleCommand(String cmd)
+     Serial.print(F("R"));
+     Serial.println(freeRam());
+   }
++  else if (cmd.equals("c")) {
++    Serial.print("ChangeCount: ");
++    Serial.println(curChangeCount);
++    Serial.print("Timing: ");
++    Serial.println(curTiming);
++  }
+ #ifdef COMP_FA20RF
+   // Set FA20RF Repetition
+   else if (cmd.startsWith("f"))
+@@ -554,7 +571,7 @@ void HandleCommand(String cmd)
+   // Print Available Commands
+   else if (cmd.equals("?"))
+   {
+-    Serial.println(F("? Use one of V i f d h t R q"));
++    Serial.println(F("? Use one of V i f d h t R q c"));
+   }
+   cmdstring = "";
+ }

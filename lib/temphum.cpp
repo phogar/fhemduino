@@ -162,6 +162,7 @@ bool receiveProtocolLIFETEC(unsigned int changeCount) {
 #define LIFE_GLITCH  460
 #define LIFE_MESSAGELENGTH 24
 
+
   if (changeCount < LIFE_MESSAGELENGTH * 2) {
     return false;
   }
@@ -170,7 +171,7 @@ bool receiveProtocolLIFETEC(unsigned int changeCount) {
   }
 
 #ifdef DEBUG
-  bool bitmessage[TX_MESSAGELENGTH];
+  bool bitmessage[LIFE_MESSAGELENGTH];
   if (GetBitStream(timings, bitmessage, LIFE_MESSAGELENGTH * 2, LIFE_ZERO - LIFE_GLITCH, LIFE_ZERO + LIFE_GLITCH, LIFE_ONE - LIFE_GLITCH, LIFE_ONE + LIFE_GLITCH) == false) {
       return false;
   }
@@ -232,16 +233,16 @@ bool receiveProtocolTX70DTH(unsigned int changeCount) {
  * AURIOL (Lidl Version: 09/2013)
  */
 bool receiveProtocolAURIOL(unsigned int changeCount) {
-#define AURIOL_SYNC 9200
+#define AURIOL_SYNC 9300
 #define AURIOL_ONE 3900
 #define AURIOL_ZERO 1950
-#define AURIOL_GLITCH 150
+#define AURIOL_GLITCH 200
 #define AURIOL_MESSAGELENGTH 32
 
   if (changeCount != (AURIOL_MESSAGELENGTH * 2) + 1) {
     return false;
   }
-
+  
   if ((timings[0] < AURIOL_SYNC - AURIOL_GLITCH) || (timings[0] > AURIOL_SYNC + AURIOL_GLITCH)) {
     return false;
   }
@@ -265,6 +266,50 @@ bool receiveProtocolAURIOL(unsigned int changeCount) {
   message = "W06";
   message += rawcode;
   message += "_"; // Fill up to 12 signs
+  available = true;
+  return true;
+
+}
+#endif
+
+#ifdef COMP_RFTECH
+/*
+ * RF-tech (Model: 217S34)
+ */
+bool receiveProtocolRFTECH(unsigned int changeCount) {
+#define RFTECH_SYNC 8000
+#define RFTECH_ONE 4084
+#define RFTECH_ZERO 2016
+#define RFTECH_GLITCH 250
+#define RFTECH_MESSAGELENGTH 24
+
+  if (changeCount != (RFTECH_MESSAGELENGTH * 2) + 1) {
+    return false;
+  }
+
+  if ((timings[0] < RFTECH_SYNC - AURIOL_GLITCH) || (timings[0] > RFTECH_SYNC + RFTECH_GLITCH)) {
+    return false;
+  }
+
+#ifdef DEBUG
+  bool bitmessage[RFTECH_MESSAGELENGTH];
+  if (GetBitStream(timings, bitmessage, RFTECH_MESSAGELENGTH * 2, RFTECH_ZERO - RFTECH_GLITCH, RFTECH_ZERO + RFTECH_GLITCH, RFTECH_ONE - RFTECH_GLITCH, RFTECH_ONE + RFTECH_GLITCH) == false) {
+    Serial.println("Err: BitStream");
+    return false;
+  }
+#endif
+
+  String rawcode;
+  rawcode = RawMessage(timings, RFTECH_MESSAGELENGTH, RFTECH_ZERO - RFTECH_GLITCH, RFTECH_ZERO + RFTECH_GLITCH, RFTECH_ONE - RFTECH_GLITCH, RFTECH_ONE + RFTECH_GLITCH);
+
+  if (rawcode == "") {
+    return false;
+  }
+
+  // check Data integrity
+  message = "W04";
+  message += rawcode;
+  message += "___"; // Fill up to 12 signs
   available = true;
   return true;
 
