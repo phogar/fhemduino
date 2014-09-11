@@ -11,6 +11,15 @@ extern String message;
 #define TX_MAX_CHANGES 88
 unsigned int timingsTX[TX_MAX_CHANGES+20];      //  TX
 
+// TFA 30.3125 sends 1330 for low, 540 for high with 1000 pauses. 
+// humidity is even longer
+#define TX_ONE     520
+#define TX_ZERO   1300
+#define TX_GLITCH  100
+#define TX_GLITCH2 200
+#define TX_PAUSE  1000
+#define TX_MESSAGELENGTH 44
+
 // http://www.f6fbb.org/domo/sensors/tx3_th.php
 void IT_TX(unsigned int duration) {
 
@@ -20,8 +29,13 @@ void IT_TX(unsigned int duration) {
 
   sDuration = fDuration + duration;
   
-  if ((sDuration > 1550 - 200 && sDuration < 1550 + 200) || (sDuration > 2150 - 200 && sDuration < 2150 + 200)) {
-    if ((duration > 520 - 100 && duration < 520 + 100) || (duration > 1250 - 100 && duration < 1250 + 100) || (duration > 950 - 100 && duration < 950 + 100)) {
+  if ((sDuration > TX_PAUSE + TX_ZERO - TX_GLITCH2 && 
+       sDuration < TX_PAUSE + TX_ZERO + TX_GLITCH2 ) || 
+      (sDuration > TX_PAUSE + TX_ONE  - TX_GLITCH2 && 
+       sDuration < TX_PAUSE + TX_ONE  + TX_GLITCH2)) {
+    if ((duration > TX_ONE   - TX_GLITCH && duration < TX_ONE   + TX_GLITCH) || 
+        (duration > TX_ZERO  - TX_GLITCH && duration < TX_ZERO  + TX_GLITCH) || 
+        (duration > TX_PAUSE - TX_GLITCH && duration < TX_PAUSE + TX_GLITCH)) {
       if (changeCount == 0 ) {
         timingsTX[changeCount++] = fDuration;
       }
@@ -41,10 +55,6 @@ void IT_TX(unsigned int duration) {
 }
 
 void receiveProtocolIT_TX(unsigned int changeCount) {
-#define TX_ONE    520
-#define TX_ZERO   1250
-#define TX_GLITCH  100
-#define TX_MESSAGELENGTH 44
 
   byte i;
   unsigned long code = 0;
