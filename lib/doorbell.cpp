@@ -83,10 +83,10 @@ void TCM_CMDs(String cmd) {
  */
 
 bool receiveProtocolHX(unsigned int changeCount) {
-#define HX_SYNC   5030
-#define HX_ONE    710
+#define HX_SYNC   5050
+#define HX_ONE    650
 #define HX_ZERO   350
-#define HX_GLITCH  40
+#define HX_GLITCH 100
 
 #define HX_MESSAGELENGTH 12
 
