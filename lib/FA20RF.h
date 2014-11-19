@@ -26,6 +26,7 @@ unsigned long hexToDec(String hexString);
  * FA20RF Receiver
  */
 static byte FArepetition = 10;
+static unsigned int FAfooterduration = 12000;
 
 void FA20RF(unsigned int duration);
 /*
