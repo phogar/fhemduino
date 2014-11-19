@@ -33,7 +33,7 @@ void FA20RF(unsigned int duration);
  */
 void receiveProtocolFA20RF(unsigned int changeCount);
 
-void sendFA20RF(char* StateMessage);
+void sendFA20RF(char* StateMessage, unsigned int FooterDur);
 
 void FA20RF_CMDs(String cmd);
 
