@@ -18,8 +18,8 @@ extern unsigned int timings[];
 unsigned int timingsFA20[FA20_MAX_CHANGES];      //  FA20RF
 
 void FA20RF(unsigned int duration) {
-#define L_STARTBIT_TIME         8020
-#define H_STARTBIT_TIME         8120
+#define L_STARTBIT_TIME         8000
+#define H_STARTBIT_TIME         8130
 #define L_STOPBIT_TIME          10000
 #define H_STOPBIT_TIME          20000 // Stop bit is something geater 10.000 us, may be not graeter then 20.000.
 
@@ -49,7 +49,7 @@ void receiveProtocolFA20RF(unsigned int changeCount) {
 #define FA20RF_SYNC2  960
 #define FA20RF_ONE    2740
 #define FA20RF_ZERO   1450
-#define FA20RF_GLITCH  70
+#define FA20RF_GLITCH  100
 #define FA20RF_MESSAGELENGTH 24
 
   if (changeCount < (FA20RF_MESSAGELENGTH * 2)) {
@@ -98,7 +98,7 @@ void receiveProtocolFA20RF(unsigned int changeCount) {
   message += String(code,HEX);
 
   sprintf(tmp, "%05u", timingsFA20[i+2]);
-  message += "-";
+  message += "_";
   message += tmp;
 
   available = true;
@@ -163,9 +163,17 @@ void FA20RF_CMDs(String cmd) {
   else if (cmd.startsWith("fs"))
   {
     digitalWrite(PIN_LED,HIGH);
-    char msg[30];
-    cmd.substring(2).toCharArray(msg,30);
-    sendFA20RF(msg);
+    char msg[25];
+    cmd.substring(2).toCharArray(msg,25);
+    if (cmd.length() > 26)
+    {
+       FAfooterduration=cmd.substring(26).toInt(); // Footer duration
+    }
+    else
+    {
+       FAfooterduration=12000; // Default footer duration
+    }
+    sendFA20RF(msg, FAfooterduration);
     digitalWrite(PIN_LED,LOW);
     Serial.println(cmd);
   }
