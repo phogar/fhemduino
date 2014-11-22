@@ -40,6 +40,8 @@
 // 2014-08-05 - Added temperature sensor AURIOL (Lidl Version: 09/2013)
 // 2014-08-06 - Implemented uptime
 // 2014-08-08 - Started outsourcing of devices in modules
+// 2014-11-20 - Sequence corrections for Heidemann HX
+// 2014-11-22 - Error correction in void decoders2500(unsigned int duration)
 
 // --- Configuration ---------------------------------------------------------
 #define PROGNAME               "FHEMduino"
@@ -452,7 +454,7 @@ void decoders(unsigned int duration) {
 -----------------------------------------------------------------------------------------------*/
 void decoders2500(unsigned int duration) {
 #define LOW_STARTBIT_TIME  2500
-#define HIGH_STARTBIT_TIME 2500
+#define HIGH_STARTBIT_TIME 5000
 #define STARTBIT_OFFSET 200
 
   static unsigned int changeCount;
@@ -475,7 +477,7 @@ void decoders2500(unsigned int duration) {
     }
     changeCount = 0;
   } 
-  else if (duration > STARTBIT_TIME) {
+  else if (duration > LOW_STARTBIT_TIME) {
     changeCount = 0;
   }
 
