@@ -40,18 +40,16 @@
 // 2014-08-05 - Added temperature sensor AURIOL (Lidl Version: 09/2013)
 // 2014-08-06 - Implemented uptime
 // 2014-08-08 - Started outsourcing of devices in modules
-// 2014-11-20 - Sequence corrections for Heidemann HX
-// 2014-11-22 - Error correction in void decoders2500(unsigned int duration)
 
 // --- Configuration ---------------------------------------------------------
 #define PROGNAME               "FHEMduino"
-#define PROGVERS               "2.2d"
+#define PROGVERS               "2.3_n"
 
 /*-----------------------------------------------------------------------------------------------
 /* Please set defines in sketch.h
 -----------------------------------------------------------------------------------------------*/
 #include "sketch.h"
-
+ 
 /*
  * Modified code to fit info fhemduino - Sidey
  * Oregon V2 decoder modfied - Olivier Lebrun
@@ -126,43 +124,7 @@ HezDecoder hez;
 XrfDecoder xrf;
 #endif
 
-/*-----------------------------------------------------------------------------------------------
-/* DCF77 stuff
------------------------------------------------------------------------------------------------*/
-/*
- * DCF77_SerialTimeOutput
- * Ralf Bohnen, 2013
- * This example code is in the public domain.
- */
-#ifdef COMP_DCF77
-#include <Time.h>        // Unterstuetzung für Datum/Zeit-Funktionen
-#include <DCF77.h>
-char time_s[9];
-char date_s[11];
- 
-#if defined(__AVR_ATmega32U4__)          //on the leonardo and other ATmega32U4 devices interrupt 1 is on dpin 2
-  #define DCF_PIN 2            // Connection pin to DCF 77 device
-#else
-  #define DCF_PIN 3            // Connection pin to DCF 77 device
-#endif
-
-#define DCF_INTERRUPT 1      // Interrupt number associated with pin
- 
-time_t time;
-DCF77 DCF = DCF77(DCF_PIN, DCF_INTERRUPT);
-
-char* sprintTime() {
-    snprintf(time_s,sizeof(time_s),"%02d%02d%02d" , hour(), minute(), second());
-    time_s[strlen(time_s)] = '\0';
-    return time_s;
-}
- 
-char* sprintDate() {
-    snprintf(date_s,sizeof(date_s),"%02d%02d%04d" , day(), month(), year());
-    date_s[strlen(date_s)] = '\0';
-    return date_s;
-}
-#endif
+void handleInterrupt();
 
 /*-----------------------------------------------------------------------------------------------
 /* Globals for message handling
@@ -187,7 +149,7 @@ void setup() {
   enableReceive();
   pinMode(PIN_RECEIVE,INPUT);
   pinMode(PIN_SEND,OUTPUT);
-
+ 
 #ifdef DEBUG
     delay(3000);
     Serial.println(" -------------------------------------- ");
@@ -201,18 +163,8 @@ void setup() {
     Serial.println(" -------------------------------------- ");
 #endif
 
-#ifdef COMP_DCF77
-    DCF.Start();
-
-#ifdef DEBUG
-    Serial.println("Warte auf Zeitsignal ... ");
-    Serial.println("Dies kann 2 oder mehr Minuten dauern.");
-#endif
-
-#endif // COMP_DCF77
-
 }
-
+ 
 /*-----------------------------------------------------------------------------------------------
 /* Main loop
 -----------------------------------------------------------------------------------------------*/
@@ -225,18 +177,6 @@ void loop() {
     resetAvailable();
   }
 
-#ifdef COMP_DCF77
-    time_t DCFtime = DCF.getTime(); // Nachschauen ob eine neue DCF77 Zeit vorhanden ist
-    if (DCFtime!=0)
-    {
-      setTime(DCFtime); //Neue Systemzeit setzen
-      // Serial.print("Neue Zeit erhalten : "); //Ausgabe an seriell
-      Serial.print("D"); 
-      Serial.print(sprintTime()); 
-      Serial.print("-"); 
-      Serial.println(sprintDate());   
-    }
-#endif
 
 //serialEvent does not work on ATmega32U4 devices like the Leonardo, so we do the handling ourselves
 #if defined(__AVR_ATmega32U4__)
@@ -246,44 +186,7 @@ void loop() {
 #endif
 }
 
-/*-----------------------------------------------------------------------------------------------
-/* Interrupt system
------------------------------------------------------------------------------------------------*/
 
-void enableReceive() {
-  attachInterrupt(0,handleInterrupt,CHANGE);
-}
-
-void disableReceive() {
-  detachInterrupt(0);
-}
-
-void handleInterrupt() {
-  static unsigned int duration;
-  static unsigned long lastTime;
-
-  duration = micros() - lastTime;
-  
-#ifdef COMP_FA20RF
-  FA20RF(duration);
-#endif
-#ifdef COMP_IT_TX
-  IT_TX(duration);
-#endif
-
-  decoders(duration);
-  decoders2500(duration);
-
-#ifdef COMP_OSV2
-  COMP_OSV2_HANDLER (duration);
-#endif
-
-#ifdef COMP_Cresta
-  COMP_Cresta_HANDLER (duration);
-#endif
-
-  lastTime += duration;
-}
 
 /*
  * call Oregon decoder when valid timings sequence available
@@ -322,13 +225,8 @@ void COMP_OSV2_HANDLER (unsigned int duration) {
 #ifdef USE_OREGON_41
     message=(String(len*8, HEX));
     message.concat(tmp);
-//    message.concat("\n");
-//    Dirty hack, just to test the 41_Oregon Module
-//    Serial.println(" ");
-//    Serial.print(len*8, HEX);
-//    Serial.println(tmp);
 #else
-   message.concat("OSV2:");
+   message.concat("Cresta:");
    message.concat(tmp);
 #endif
    orscV2.resetDecoder();
@@ -346,7 +244,7 @@ void COMP_Cresta_HANDLER (unsigned int duration) {
     const byte* data = cres.getData(len) + 5;
     char tmp[36]="";
     uint8_t tmp_len = 0;
-    strcat(tmp, "CRESTA:");
+    strcat(tmp, "OSV2:");
     tmp_len = 7;
 
 #ifdef DEBUG
@@ -374,6 +272,45 @@ void COMP_Cresta_HANDLER (unsigned int duration) {
   cres.resetDecoder();
 }
 #endif
+
+
+#ifdef COMP_HEZ
+void COMP_HEZ_HANDLER (unsigned int duration) {
+  if (hez.nextPulse(duration))
+  {
+    byte len;
+    const byte* data = hez.getData(len) + 5;
+    char tmp[36]="";
+    uint8_t tmp_len = 0;
+    strcat(tmp, "HEZ:");
+    tmp_len = 7;
+
+#ifdef DEBUG
+      Serial.print("HEXStream");
+#endif
+
+    for (byte i = 0; i < len; ++i) {
+#ifdef DEBUG
+        Serial.print(data[i] >> 4, HEX);
+        Serial.print(data[i] & 0x0F, HEX);
+        Serial.print(",");
+#endif
+      tmp_len += snprintf(tmp + tmp_len, 36, "%02X", data[i]);
+    }
+    
+#ifdef DEBUG
+      Serial.println(" ");
+      Serial.print("Length:");
+      Serial.println(len,HEX);
+#endif
+
+    message = tmp;
+    available = true;
+  }
+  hez.resetDecoder();
+}
+#endif
+
 
 /*-----------------------------------------------------------------------------------------------
 /* Generation bitstreams with sync bits greater than 5000 us
@@ -411,6 +348,9 @@ void decoders(unsigned int duration) {
 #ifdef COMP_PT2262
       if (rc == false) {
         rc = receiveProtocolPT2262(changeCount);
+      }
+      if (rc == false) {
+        rc = receiveProtocolHTE(changeCount);
       }
 #endif
 #ifdef COMP_LIFETEC
@@ -460,8 +400,10 @@ void decoders2500(unsigned int duration) {
   static unsigned int changeCount;
   static unsigned int repeatCount;
   bool rc = false;
-
-  if ((duration > LOW_STARTBIT_TIME && duration < HIGH_STARTBIT_TIME) && duration > timings2500[0] - STARTBIT_OFFSET && duration < timings2500[0] + STARTBIT_OFFSET) {
+// if (duration > LOW_STARTBIT_TIME && duration > timings2500[0] - STARTBIT_OFFSET && duration < timings2500[0] + STARTBIT_OFFSET) {
+ 
+ if ((duration > LOW_STARTBIT_TIME && duration < HIGH_STARTBIT_TIME) && duration > timings2500[0] - STARTBIT_OFFSET && duration < timings2500[0] + STARTBIT_OFFSET)
+ {
     repeatCount++;
     changeCount--;
     if (repeatCount == 2) {
@@ -489,27 +431,50 @@ void decoders2500(unsigned int duration) {
 }
 
 /*-----------------------------------------------------------------------------------------------
-/* Serial Command Handling
+/* Interrupt system
 -----------------------------------------------------------------------------------------------*/
-void serialEvent()
-{
-  while (Serial.available())
-  {
-    char inChar = (char)Serial.read();
-    switch(inChar)
-    {
-    case '\n':
-    case '\r':
-    case '\0':
-    case '#':
-      HandleCommand(cmdstring);
-      break;
-    default:
-      cmdstring = cmdstring + inChar;
-    }
-  }
+
+void enableReceive() {
+  attachInterrupt(0,handleInterrupt,CHANGE);
 }
 
+void disableReceive() {
+  detachInterrupt(0);
+}
+
+void handleInterrupt() {
+  static unsigned int duration;
+  static unsigned long lastTime;
+
+  duration = micros() - lastTime;
+  
+#ifdef COMP_FA20RF
+  FA20RF(duration);
+#endif
+#ifdef COMP_IT_TX
+  IT_TX(duration);
+#endif
+
+  decoders(duration);
+  decoders2500(duration);
+
+#ifdef COMP_OSV2
+  //COMP_OSV2_HANDLER (duration);
+#endif
+
+#ifdef COMP_Cresta
+  COMP_Cresta_HANDLER (duration);
+#endif
+
+#ifdef COMP_HEZ
+  COMP_HEZ_HANDLER (duration);
+#endif
+
+  lastTime += duration;
+}
+/*-----------------------------------------------------------------------------------------------
+/* Serial Command Handling
+-----------------------------------------------------------------------------------------------*/
 void HandleCommand(String cmd)
 {
   // Version Information
@@ -560,4 +525,24 @@ void HandleCommand(String cmd)
   }
   cmdstring = "";
 }
+void serialEvent()
+{
+  while (Serial.available())
+  {
+    char inChar = (char)Serial.read();
+    switch(inChar)
+    {
+    case '\n':
+    case '\r':
+    case '\0':
+    case '#':
+      HandleCommand(cmdstring);
+      break;
+    default:
+      cmdstring = cmdstring + inChar;
+    }
+  }
+}
+
+
 
