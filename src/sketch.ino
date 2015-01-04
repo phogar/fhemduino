@@ -45,7 +45,7 @@
 
 // --- Configuration ---------------------------------------------------------
 #define PROGNAME               "FHEMduino"
-#define PROGVERS               "2.2d"
+#define PROGVERS               "2.3.0.2"
 
 /*-----------------------------------------------------------------------------------------------
 /* Please set defines in sketch.h
