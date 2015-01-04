@@ -184,7 +184,6 @@ unsigned int timings2500[MAX_CHANGES];
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(BAUDRATE);
-  enableReceive();
   pinMode(PIN_RECEIVE,INPUT);
   pinMode(PIN_SEND,OUTPUT);
 
@@ -200,7 +199,8 @@ void setup() {
     Serial.println(freeRam()); 
     Serial.println(" -------------------------------------- ");
 #endif
-
+    delay(2000);
+    enableReceive();
 #ifdef COMP_DCF77
     DCF.Start();
 
