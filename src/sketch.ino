@@ -60,6 +60,13 @@
 */
 
 /*-----------------------------------------------------------------------------------------------
+/* Somfy RTS receiver
+-----------------------------------------------------------------------------------------------*/
+#ifdef COMP_SOMFY_RTS
+  #include "somfyRTS.h"
+#endif
+
+/*-----------------------------------------------------------------------------------------------
 /* Devices with temperatur / humidity functionality
 -----------------------------------------------------------------------------------------------*/
 #ifdef COMP_TEMP_HUM
@@ -262,6 +269,9 @@ void handleInterrupt() {
 
   duration = micros() - lastTime;
   
+#ifdef COMP_SOMFY_RTS
+  somfyHandler(duration);
+#endif
 #ifdef COMP_FA20RF
   FA20RF(duration);
 #endif
