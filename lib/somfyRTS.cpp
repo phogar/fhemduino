@@ -18,13 +18,10 @@ volatile byte int_bitCount;
 volatile byte int_presyncCount;
 
 volatile byte int_messageDone[7];
-// volatile boolean int_hasMessage;
 
 // Interrupt handler
 void somfyHandler(unsigned int duration) {
     // calculate last change duration (and store last time)
-//    duration = micros() - int_chgLast;
-//    int_chgLast += duration;
     if ( int_hasSync ) {
 //      Serial.print("Duration : ");
 //      Serial.println( duration );
@@ -38,9 +35,6 @@ void somfyHandler(unsigned int duration) {
 */
     } else {
 
-//      Serial.print("Duration : ");
-//      Serial.println( duration );
-//    return;
       if ( ( duration > TIME_PRESYNC_LOW ) && ( duration < TIME_PRESYNC_HIGH ) ) {
         int_presyncCount++;
       } else if ( ( duration > TIME_SYNC_LOW ) && ( duration < TIME_SYNC_HIGH ) && ( int_presyncCount >= MIN_PRESYNC_COUNT ) ) {
@@ -111,26 +105,31 @@ boolean handleChange( unsigned int duration ) {
       }
 
       // set message ready when checksum is correct
-//      int_hasMessage = ( (checkSum & 0x0F) == 0 ); 
       if ( (checkSum & 0x0F) == 0 ) {
-         String tmpMessage = "Y ";
+//	# message looks like this
+//	# Ys_key_ctrl_cks_rollcode_a2a1a0
+//	# Ys ad 20 0ae3 a29842
+//	# address needs bytes 1 and 3 swapped
+//      # lenght is 2+1 2+1 2+1 4+1 6 = 20
+
+        String tmpMessage = "Ys ";
          char tmp[7];
          
          // key
          sprintf( tmp, "%2.2x ", int_messageDone[0] );
          tmpMessage += tmp;
          // command
-         sprintf( tmp, "%1x  ", (int_messageDone[1]>>4) );
+//         sprintf( tmp, "%1x  ", (int_messageDone[1]>>4) );
+         sprintf( tmp, "%2.2x ", (int_messageDone[1] & 0xF0) );
          tmpMessage += tmp;
          // rolling code
          sprintf( tmp, "%4.4x ", (int_messageDone[2] << 8) + int_messageDone[3] );
          tmpMessage += tmp;
          // address
-         sprintf( tmp, "%6.6x", (int_messageDone[4] << 16) + (int_messageDone[5] << 8) + int_messageDone[6] );
+         sprintf( tmp, "%2.2x%2.2x%2.2x", int_messageDone[6],int_messageDone[5], int_messageDone[4] );
          tmpMessage += tmp;
          message = tmpMessage;
          available = true;
-//         int_hasMessage = false;
          
 #ifdef DEBUG
 
