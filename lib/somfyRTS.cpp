@@ -126,7 +126,7 @@ boolean handleChange( unsigned int duration ) {
          sprintf( tmp, "%4.4x ", (int_messageDone[2] << 8) + int_messageDone[3] );
          tmpMessage += tmp;
          // address
-         sprintf( tmp, "%2.2x%2.2x%2.2x", int_messageDone[6],int_messageDone[5], int_messageDone[4] );
+         sprintf( tmp, "%2.2x%2.2x%2.2x", int_messageDone[4],int_messageDone[5],int_messageDone[6] );
          tmpMessage += tmp;
          message = tmpMessage;
          available = true;
