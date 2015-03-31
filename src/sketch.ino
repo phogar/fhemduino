@@ -40,7 +40,7 @@
 // 2014-08-05 - Added temperature sensor AURIOL (Lidl Version: 09/2013)
 // 2014-08-06 - Implemented uptime
 // 2014-08-08 - Started outsourcing of devices in modules
-// 2015-03-17 - viegener added somfyRTS with separate module and prefix Y --> message format Y <key-2-hex> <cmd-1-hex>  <rollingcode-4-hex> <address-6-hex> 
+// 2015-03-17 - viegener added somfyRTS with separate module and prefix Y --> message format Ys <key-2-hex> <cmd-2-hex> <rollingcode-4-hex> <address-6-hex> 
 
 // --- Configuration ---------------------------------------------------------
 #define PROGNAME               "FHEMduino"
