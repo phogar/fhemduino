@@ -47,5 +47,10 @@ void somfyHandler(unsigned int duration);
 boolean handleChange( unsigned int duration );
 
 
+#ifdef DEBUG
 // print message human readable on Serial --> for debug
 void printMessage();
+
+#endif
+
+

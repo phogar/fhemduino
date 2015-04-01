@@ -10,8 +10,7 @@ extern String message;
 /*
  * Receiver
  */
-// store last pulse length (us)
-// volatile word int_chgLast;
+// int for interupt routine relevant variables
 volatile boolean int_hasSync = false;
 
 volatile byte int_bitCount;
@@ -25,7 +24,6 @@ void somfyHandler(unsigned int duration) {
     if ( int_hasSync ) {
 //      Serial.print("Duration : ");
 //      Serial.println( duration );
-//    return;
       int_hasSync = handleChange( duration );
 /*
       if ( ( int_bitCount % 10 ) == 0 ) {
@@ -49,7 +47,7 @@ void somfyHandler(unsigned int duration) {
 
 // helper for decoding bits
 // call with duration 0 to prepare for data receive
-// message format Y <key-2-hex> <cmd-1-hex>  <rollingcode-4-hex> <address-6-hex> 
+// message format Y <key-2-hex> <cmd-2-hex> <rollingcode-4-hex> <address-6-hex> 
 boolean handleChange( unsigned int duration ) {
   static byte lastBitValue;
   static boolean hasHalfBit;
@@ -86,7 +84,7 @@ boolean handleChange( unsigned int duration ) {
     Serial.print(duration);
     Serial.println("::");
 #endif
-    // abort receive due to 
+    // abort receive due to duration not in tolerated ranges 
     return false;
   }    
     
@@ -119,7 +117,6 @@ boolean handleChange( unsigned int duration ) {
          sprintf( tmp, "%2.2x ", int_messageDone[0] );
          tmpMessage += tmp;
          // command
-//         sprintf( tmp, "%1x  ", (int_messageDone[1]>>4) );
          sprintf( tmp, "%2.2x ", (int_messageDone[1] & 0xF0) );
          tmpMessage += tmp;
          // rolling code
@@ -148,6 +145,8 @@ boolean handleChange( unsigned int duration ) {
 
   return true;
 }
+
+#ifdef DEBUG
 
 void printMessage() {
 
@@ -179,4 +178,6 @@ void printMessage() {
   
   Serial.println("  "); 
 }
+
+#endif  
 
