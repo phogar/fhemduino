@@ -40,10 +40,11 @@
 // 2014-08-05 - Added temperature sensor AURIOL (Lidl Version: 09/2013)
 // 2014-08-06 - Implemented uptime
 // 2014-08-08 - Started outsourcing of devices in modules
+// 2015-03-17 - viegener added somfyRTS with separate module and prefix Y --> message format Ys <key-2-hex> <cmd-2-hex> <rollingcode-4-hex> <address-6-hex> 
 
 // --- Configuration ---------------------------------------------------------
 #define PROGNAME               "FHEMduino"
-#define PROGVERS               "2.3"
+#define PROGVERS               "2.3v"
 
 /*-----------------------------------------------------------------------------------------------
 /* Please set defines in sketch.h
@@ -58,6 +59,13 @@
  * 2010-04-11 <jcw@equi4.com> http://opensource.org/licenses/mit-license.php
  *
 */
+
+/*-----------------------------------------------------------------------------------------------
+/* Somfy RTS receiver
+-----------------------------------------------------------------------------------------------*/
+#ifdef COMP_SOMFY_RTS
+  #include "somfyRTS.h"
+#endif
 
 /*-----------------------------------------------------------------------------------------------
 /* Devices with temperatur / humidity functionality
@@ -262,6 +270,9 @@ void handleInterrupt() {
 
   duration = micros() - lastTime;
   
+#ifdef COMP_SOMFY_RTS
+  somfyHandler(duration);
+#endif
 #ifdef COMP_FA20RF
   FA20RF(duration);
 #endif
