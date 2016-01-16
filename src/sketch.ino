@@ -451,6 +451,11 @@ void decoders(unsigned int duration) {
         rc = receiveProtocolAURIOL(changeCount);
       }
 #endif
+#ifdef COMP_NC7104
+      if (rc == false) {
+        rc = receiveProtocolNC7104(changeCount);
+      }
+#endif
       if (rc == false) {
         // rc = next decoder;
       }
