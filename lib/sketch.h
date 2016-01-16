@@ -19,7 +19,11 @@
 #define PIN_RECEIVE            2
 #endif
 
+#if defined(__AVR_ATmega32U4__)          //  
+#define PIN_LED               2        // on some 32U Devices, there is no PIN 13, so we use 2 here. 
+#else 
 #define PIN_LED                13
+#endif 
 
 #if defined(__AVR_ATmega32U4__)          //  
 #define PIN_SEND               10        // on some 32U Devices, there is no PIN 11, so we use 10 here. 
