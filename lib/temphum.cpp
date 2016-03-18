@@ -270,3 +270,55 @@ bool receiveProtocolAURIOL(unsigned int changeCount) {
 
 }
 #endif
+
+#ifdef COMP_NC7104
+/*
+ * FreeTec NC7104-675 (Pearl.de)
+ * - Same data structure as the PEARL NC7159, just different ID (0b1001) and an extra 0 bit at the end
+ * - Timings are a bit different than the PEARL NC7159
+ */
+bool receiveProtocolNC7104(unsigned int changeCount) {
+#define NC7104_SYNC 9000
+#define NC7104_ONE 4000
+#define NC7104_ZERO 2000
+#define NC7104_GLITCH 200
+#define NC7104_MESSAGELENGTH 36
+
+  // actually the message length is 37 but the last bit is always 0
+  // for compatibility to W03, we ignore this bit, but we have to check
+  // the actual length here
+  if (changeCount < (NC7104_MESSAGELENGTH+1) * 2) return false;
+
+  if ((timings[0] < NC7104_SYNC - NC7104_GLITCH) || (timings[0] > NC7104_SYNC + NC7104_GLITCH)) {
+    return false;
+  }
+
+#ifdef DEBUG
+  bool bitmessage[NC7104_MESSAGELENGTH];
+  if (GetBitStream(timings, bitmessage, NC7104_MESSAGELENGTH * 2, NC7104_ZERO - NC7104_GLITCH, NC7104_ZERO + NC7104_GLITCH, NC7104_ONE - NC7104_GLITCH, NC7104_ONE + NC7104_GLITCH) == false) {
+      return false;
+  }
+#endif
+
+  String rawcode;
+  rawcode = RawMessage(timings, NC7104_MESSAGELENGTH, NC7104_ZERO - NC7104_GLITCH, NC7104_ZERO + NC7104_GLITCH, NC7104_ONE - NC7104_GLITCH, NC7104_ONE + NC7104_GLITCH);
+
+  if (rawcode == "") {
+    return false;
+  }
+
+  // check Data integrity
+  // First 4 bits always 1001 == 9
+  if (rawcode[0] != '9') {
+    return false;
+  }
+
+  message = "W03"; 
+  message += rawcode;
+  available = true;
+  return true;
+
+}
+#endif
+
+

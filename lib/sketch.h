@@ -19,7 +19,11 @@
 #define PIN_RECEIVE            2
 #endif
 
+#if defined(__AVR_ATmega32U4__)          //  
+#define PIN_LED               2        // on some 32U Devices, there is no PIN 13, so we use 2 here. 
+#else 
 #define PIN_LED                13
+#endif 
 
 #if defined(__AVR_ATmega32U4__)          //  
 #define PIN_SEND               10        // on some 32U Devices, there is no PIN 11, so we use 10 here. 
@@ -60,6 +64,8 @@
 //#define COMP_Cresta     // Compile sketch with Cresta Support (currently not implemented, just for future use)
 #define USE_OREGON_41   // Use oregon_41 Module which is already included in fhem. If not defined, the 14_fhemduino_oregon module will be used.
 
+#define COMP_NC7104      // Compile sketch with FreeTec NC-7104-675 (Pearl.de)
+
 // Future enhancement
 //#define COMP_OSV3     // Compile sketch with OSV3 Support (currently not implemented, just for future use)
 //#define COMP_Kaku     // Compile sketch with Kaku  Support (currently not implemented, just for future use)
@@ -84,4 +90,8 @@
 #ifdef COMP_AURIOL      // Compile sketch with AURIOL (Lidl Version: 09/2013); only temperature
   #define COMP_TEMP_HUM // General define to compile sketch with temperature / humidity devices
 #endif
+#ifdef COMP_NC7104      // Compile sketch with FreeTec NC-7104-675 (Pearl.de)
+  #define COMP_TEMP_HUM // General define to compile sketch with temperature / humidity devices
+#endif
+
 

@@ -29,5 +29,7 @@ bool receiveProtocolTX70DTH(unsigned int changeCount);
 
 bool receiveProtocolAURIOL(unsigned int changeCount);
 
+bool receiveProtocolNC7104(unsigned int changeCount);
+
 String hex2bin(String hexaDecimal);
 
