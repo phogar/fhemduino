@@ -26,9 +26,6 @@ unsigned long hexToDec(String hexString);
  * PT2262 Stuff
  */
 #define RECEIVETOLERANCE       60
-//extern byte ITrepetition;
-//extern byte ITreceivetolerance;
-//extern unsigned int ITbaseduration;
 
 bool receiveProtocolPT2262(unsigned int changeCount);
 

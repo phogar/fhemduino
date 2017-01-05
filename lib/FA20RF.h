@@ -25,8 +25,6 @@ unsigned long hexToDec(String hexString);
 /*
  * FA20RF Receiver
  */
-extern byte FArepetition;
-
 void FA20RF(unsigned int duration);
 /*
  * FA20RF Decoder
