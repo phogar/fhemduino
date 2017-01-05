@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------------------------------
-/* Devices with sending / receiving functionality => PT2262
------------------------------------------------------------------------------------------------*/
+ * Devices with sending / receiving functionality => PT2262
+ *----------------------------------------------------------------------------------------------*/
 
 //#define DEBUG           // Compile with Debug informations
 
@@ -26,9 +26,9 @@ unsigned long hexToDec(String hexString);
  * PT2262 Stuff
  */
 #define RECEIVETOLERANCE       60
-static byte ITrepetition = 6;
-static byte ITreceivetolerance = 60;
-static unsigned int ITbaseduration = 350;
+//extern byte ITrepetition;
+//extern byte ITreceivetolerance;
+//extern unsigned int ITbaseduration;
 
 bool receiveProtocolPT2262(unsigned int changeCount);
 

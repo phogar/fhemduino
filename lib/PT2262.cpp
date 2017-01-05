@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------------------------------
-/* Devices with sending / receiving functionality => PT2262
------------------------------------------------------------------------------------------------*/
+ * Devices with sending / receiving functionality => PT2262
+ *----------------------------------------------------------------------------------------------*/
 
 #include "PT2262.h"
 
@@ -9,6 +9,11 @@ extern volatile bool available;
 extern String message;
 
 extern unsigned int timings[];
+
+static byte ITrepetition = 6;
+static byte ITreceivetolerance = 60;
+static unsigned int ITbaseduration = 350;
+
 
 bool receiveProtocolPT2262(unsigned int changeCount) {
 
@@ -21,7 +26,7 @@ bool receiveProtocolPT2262(unsigned int changeCount) {
   unsigned long delay = timings[0] / 31;
   unsigned long delayTolerance = delay * ITreceivetolerance * 0.01; 
 
-  for (int i = 1; i < changeCount; i=i+2) {
+  for (unsigned int i = 1; i < changeCount; i=i+2) {
     if (timings[i] > delay-delayTolerance && timings[i] < delay+delayTolerance && timings[i+1] > delay*3-delayTolerance && timings[i+1] < delay*3+delayTolerance) {
       code = code << 1;
     }

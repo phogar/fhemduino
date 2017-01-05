@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------------------------------
-/* door bell support: Tchibo / Heidemann HX Pocket (70283)
------------------------------------------------------------------------------------------------*/
+ * door bell support: Tchibo / Heidemann HX Pocket (70283)
+ *----------------------------------------------------------------------------------------------*/
 
 #include "doorbell.h"
 
@@ -97,7 +97,7 @@ bool receiveProtocolHX(unsigned int changeCount) {
     return false;
   }
 
-  bool bitmessage[HX_MESSAGELENGTH];
+  //bool bitmessage[HX_MESSAGELENGTH];
   
 #ifdef DEBUG
   if (GetBitStream(timings, bitmessage, HX_MESSAGELENGTH * 2, HX_ZERO - HX_GLITCH, HX_ZERO + HX_GLITCH, HX_ONE - HX_GLITCH, HX_ONE + HX_GLITCH) == false) {

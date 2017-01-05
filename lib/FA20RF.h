@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------------------------------
-/* Smoke dector FA20RF
------------------------------------------------------------------------------------------------*/
+ * Smoke dector FA20RF
+ *----------------------------------------------------------------------------------------------*/
 
 //#define DEBUG           // Compile with Debug informations
 
@@ -25,7 +25,7 @@ unsigned long hexToDec(String hexString);
 /*
  * FA20RF Receiver
  */
-static byte FArepetition = 10;
+extern byte FArepetition;
 
 void FA20RF(unsigned int duration);
 /*
