@@ -316,7 +316,7 @@ void COMP_OSV2_HANDLER (unsigned int duration) {
     const byte* data = orscV2.getData(len);
 
     char tmp[36]="";
-    char len_field[2]="";
+//    char len_field[2]="";
     uint8_t tmp_len = 0;
     //strcat(tmp, "OSV2:");
     //tmp_len = 5;
